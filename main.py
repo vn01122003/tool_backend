@@ -84,6 +84,10 @@ def step_generate_image(prompt: str) -> BytesIO:
     output_buffer.seek(0)
     return output_buffer
 
+@app.get("/")
+def read_root():
+    return {"message": "Backend is running!"}
+
 @app.post("/webhook")
 async def generate_from_image(request: Request):
     try:
