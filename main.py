@@ -27,6 +27,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def step_remove_background(image_bytes: bytes) -> bytes:
+    return remove(image_bytes)
+
 # Step 1: Analyze image with Qwen2.5-VL
 def step_analyze_image(image_bytes: bytes) -> str:
     client = InferenceClient(model=QWEN_MODEL, token=HF_API_TOKEN)
@@ -103,8 +106,13 @@ async def generate_from_image(request: Request):
         base64_clean = re.sub(r"^data:image\/\w+;base64,", "", base64_image)
         image_bytes = base64.b64decode(base64_clean)
 
+        # Remove background before captioning
+        print("🧼 Step 0: Removing background...")
+        image_bytes_no_bg = step_remove_background(image_bytes)
+
+
         print("🔍 Step 1: Analyzing image with Qwen2.5-VL...")
-        caption = step_analyze_image(image_bytes)
+        caption = step_analyze_image(image_bytes_no_bg)
         print(f"✅ Caption received:\n{caption}")
 
         print("📝 Step 2: Generating prompt...")
