@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from huggingface_hub import InferenceClient
 from dotenv import load_dotenv
+from rembg import remove
 
 # Load .env file
 load_dotenv()
