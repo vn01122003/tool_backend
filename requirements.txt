@@ -5,3 +5,4 @@ pillow
 huggingface_hub
 pillow
 dotenv
+rembg
