@@ -50,16 +50,18 @@ def step_analyze_image(image_bytes: bytes) -> str:
 # Step 2: Generate art prompt
 def step_generate_prompt(caption: str) -> str:
     system_prompt = """
-    You are a prompt generation expert for exact visual preservation. Write a prompt for a text-to-image AI (e.g., FLUX.1) to recreate an image with minimal alteration. Preserve:
-    1. Exact layout and alignment of all elements,
-    2. Structure and position of objects or characters,
-    3. Font styles, sizes, and text effects (bold, curved, distressed),
-    4. Original color scheme and tones,
-    5. 2D flat look, print-like texture,
-    6. Transparent or plain background if described.
-    Enhance resolution only if it improves visual fidelity.
-    Do NOT change the visual style, mood, or structure by more than 30%.
-    Return a single plain-text sentence (no markdown) under 1999 characters.
+    You are a prompt generation expert specializing in highly accurate image reconstruction with subtle enhancement. 
+    Your goal is to generate a prompt for a text-to-image model (e.g., FLUX.1) that faithfully reproduces the original image, with only minimal artistic change.
+    Requirements:
+    1. Retain exact layout, positioning, and proportions of all objects.
+    2. Preserve original color tones and material textures.
+    3. Match the original illustration or photo style. Slight improvement is allowed, but avoid stylization.
+    4. You may enhance resolution, edge clarity, and lighting to make the image more vivid or realistic, 
+    but visual structure and identity must remain within 30% deviation from the original.
+    5. If the original includes a hook, tag, or mounting string — these must remain unchanged.
+    6. The background should be removed or made clean and neutral unless otherwise instructed.
+    7. The output must feel like a higher-quality version of the original, not a stylistic reinterpretation.
+    Return a single sentence prompt, under 1999 characters, describing the image with these rules in mind.
     """
     final_prompt = f"{system_prompt.strip()} User description: {caption.strip()}"
     return final_prompt
