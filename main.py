@@ -28,9 +28,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def step_remove_background(image_bytes: bytes) -> bytes:
-    return remove(image_bytes)
-
 # Step 1: Analyze image with Qwen2.5-VL
 def step_analyze_image(image_bytes: bytes) -> str:
     client = InferenceClient(model=QWEN_MODEL, token=HF_API_TOKEN)
@@ -53,14 +50,15 @@ def step_analyze_image(image_bytes: bytes) -> str:
 # Step 2: Generate art prompt
 def step_generate_prompt(caption: str) -> str:
     system_prompt = """
-    You are a prompt generation expert for T-shirt art. Write a prompt for a text-to-image AI (e.g., FLUX.1) to accurately reconstruct a design from a user description. Preserve:
-    1. Exact layout and alignment of elements,
-    2. Structure and pose of any characters or objects,
-    3. Text content, font style, size, effects (distressed, curved),
-    4. Color scheme, background (transparent or textured),
-    5. Print-like textures and outlines,
-    6. 2D flat look, no added depth or stylization.
-    Enhance resolution only if it improves fidelity.
+    You are a prompt generation expert for exact visual preservation. Write a prompt for a text-to-image AI (e.g., FLUX.1) to recreate an image with minimal alteration. Preserve:
+    1. Exact layout and alignment of all elements,
+    2. Structure and position of objects or characters,
+    3. Font styles, sizes, and text effects (bold, curved, distressed),
+    4. Original color scheme and tones,
+    5. 2D flat look, print-like texture,
+    6. Transparent or plain background if described.
+    Enhance resolution only if it improves visual fidelity.
+    Do NOT change the visual style, mood, or structure by more than 30%.
     Return a single plain-text sentence (no markdown) under 1999 characters.
     """
     final_prompt = f"{system_prompt.strip()} User description: {caption.strip()}"
@@ -97,6 +95,8 @@ async def generate_from_image(request: Request):
     try:
         data = await request.json()
         base64_image = data.get("chatInput")
+        extra_prompt = data.get("extraPrompt", "")  # ✅ NEW: get extraPrompt from request
+
         if not base64_image:
             print("❌ No 'chatInput' found in request.")
             return {"error": "Missing 'chatInput'"}
@@ -107,13 +107,13 @@ async def generate_from_image(request: Request):
         base64_clean = re.sub(r"^data:image\/\w+;base64,", "", base64_image)
         image_bytes = base64.b64decode(base64_clean)
 
-        # Remove background before captioning
-        print("🧼 Step 0: Removing background...")
-        image_bytes_no_bg = step_remove_background(image_bytes)
-
-
         print("🔍 Step 1: Analyzing image with Qwen2.5-VL...")
-        caption = step_analyze_image(image_bytes_no_bg)
+        caption = step_analyze_image(image_bytes)
+
+        # ✅ NEW: Append user-controlled prompt logic
+        if extra_prompt:
+            caption += " " + extra_prompt
+
         print(f"✅ Caption received:\n{caption}")
 
         print("📝 Step 2: Generating prompt...")
